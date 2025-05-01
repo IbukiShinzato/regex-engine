@@ -26,37 +26,44 @@ pub enum AST {
     Seq(Vec<AST>),
 }
 
-impl Display for AST {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // if let Ok(mut space) = SPACE.write() {
-        //     *space += 1;
-        // } else {
-        //     eprintln!("could not write for space")
-        // }
-
-        let space = " ".repeat(*SPACE_COUNT.read().unwrap());
+impl AST {
+    fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, depth: usize) -> fmt::Result {
+        let indent = " ".repeat(depth);
+        let branch = if depth == 0 { "  " } else { "└─" };
 
         match self {
-            AST::Char(c) => write!(f, "Char({})", c),
-            AST::Plus(ast) => write!(f, "Plus({})", ast),
-            AST::Star(ast) => write!(f, "Star({})", ast),
-            AST::Question(ast) => write!(f, "Question({})", ast),
-            AST::Or(ast1, ast2) => {
-                write!(f, "Or\n{}├─{}\n{}└─{}", space, ast1, space, ast2)
+            AST::Char(c) => writeln!(f, "{}└─Char({})", indent, c),
+            AST::Plus(ast) => {
+                writeln!(f, "{}{}Plus", indent, branch)?;
+                ast.fmt_with_indent(f, depth + 2)
             }
-            AST::Seq(asts) => {
-                for (index, ast) in asts.iter().enumerate() {
-                    if index + 1 == asts.len() {
-                        // write!(f, "{}└─", space)?;
-                        add_space_count();
-                    } else {
-                        // write!(f, "{}├─", space)?;
-                    }
-                    ast.fmt(f)?;
+            AST::Star(ast) => {
+                writeln!(f, "{}{}Star", indent, branch)?;
+                ast.fmt_with_indent(f, depth + 2)
+            }
+            AST::Question(ast) => {
+                writeln!(f, "{}{}Question", indent, branch)?;
+                ast.fmt_with_indent(f, depth + 2)
+            }
+            AST::Or(lhs, rhs) => {
+                writeln!(f, "{}{}Or", indent, branch)?;
+                lhs.fmt_with_indent(f, depth + 2)?;
+                rhs.fmt_with_indent(f, depth)
+            }
+            AST::Seq(nodes) => {
+                writeln!(f, "{}{}Seq", indent, branch)?;
+                for node in nodes {
+                    node.fmt_with_indent(f, depth + 2)?;
                 }
                 Ok(())
             }
         }
+    }
+}
+
+impl Display for AST {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.fmt_with_indent(f, 0)
     }
 }
 

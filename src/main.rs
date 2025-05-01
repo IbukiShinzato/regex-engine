@@ -1,4 +1,4 @@
-use regex::engine::parser::parse;
+use regex_engine::engine::parser::parse;
 use std::{env::args, io};
 
 fn main() -> io::Result<()> {
@@ -6,7 +6,8 @@ fn main() -> io::Result<()> {
 
     if let Some(expr) = args.get(1) {
         let ast = parse(expr).map_err(|msg| io::Error::new(io::ErrorKind::InvalidInput, msg))?;
-        // println!("{:?}", ast);
+        println!("{:?}", ast);
+        println!();
         println!("{}", ast);
     } else {
         eprintln!("{}", "could not get expr");
