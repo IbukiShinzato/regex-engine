@@ -6,15 +6,6 @@ use std::{
     sync::RwLock,
 };
 
-static SPACE_COUNT: RwLock<usize> = RwLock::new(0);
-
-fn add_space_count() {
-    SPACE_COUNT
-        .write()
-        .map(|mut space_count| *space_count += 2)
-        .unwrap_or_else(|e| eprintln!("Lock poisoned: {}", e));
-}
-
 /// Types for expressing AST.
 #[derive(Debug)]
 pub enum AST {
