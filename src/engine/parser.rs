@@ -9,6 +9,7 @@ use std::{
 #[derive(Debug)]
 pub enum AST {
     Char(char),
+    Dot,
     Plus(Box<AST>),
     Star(Box<AST>),
     Question(Box<AST>),
@@ -23,6 +24,7 @@ impl AST {
 
         match self {
             AST::Char(c) => writeln!(f, "{}└─Char({})", indent, c),
+            AST::Dot => writeln!(f, "{}└─Dor", indent),
             AST::Plus(ast) => {
                 writeln!(f, "{}{}Plus", indent, branch)?;
                 ast.fmt_with_indent(f, depth + 2)
@@ -92,7 +94,7 @@ impl Error for ParseError {}
 /// Escaping special characters
 fn parse_escape(pos: usize, c: char) -> Result<AST, ParseError> {
     match c {
-        '\\' | '(' | ')' | '|' | '+' | '*' | '?' => Ok(AST::Char(c)),
+        '\\' | '(' | ')' | '|' | '.' | '+' | '*' | '?' => Ok(AST::Char(c)),
         _ => {
             let err = ParseError::InvalidEscape(pos, c);
             Err(err)
@@ -100,19 +102,19 @@ fn parse_escape(pos: usize, c: char) -> Result<AST, ParseError> {
     }
 }
 
-/// Enumerated type for use in the parse_plus_star_question function
+/// Enumerated type for use in the parse_dot_plus_star_question function
 enum PSQ {
     Plus,
     Star,
     Question,
 }
 
-/// +, *, ? to AST.
+/// ., +, *, ? to AST.
 ///
-/// In postfix notation, it is an error if there is no pattern before +, *, or ?.
+/// In postfix notation, it is an error if there is no pattern before ., +, *, or ?.
 ///
 /// Example: *ab, abc|+, etc. are errors.
-fn parse_plus_star_question(
+fn parse_dot_plus_star_question(
     seq: &mut Vec<AST>,
     ast_type: PSQ,
     pos: usize,
@@ -166,9 +168,9 @@ pub fn parse(expr: &str) -> Result<AST, ParseError> {
     for (i, c) in expr.chars().enumerate() {
         match &state {
             ParseState::Char => match c {
-                '+' => parse_plus_star_question(&mut seq, PSQ::Plus, i)?,
-                '*' => parse_plus_star_question(&mut seq, PSQ::Star, i)?,
-                '?' => parse_plus_star_question(&mut seq, PSQ::Question, i)?,
+                '+' => parse_dot_plus_star_question(&mut seq, PSQ::Plus, i)?,
+                '*' => parse_dot_plus_star_question(&mut seq, PSQ::Star, i)?,
+                '?' => parse_dot_plus_star_question(&mut seq, PSQ::Question, i)?,
                 '(' => {
                     // Stores the current context on the stack,
                     // Empty the current context.
@@ -207,6 +209,7 @@ pub fn parse(expr: &str) -> Result<AST, ParseError> {
                     }
                 }
                 '\\' => state = ParseState::Escape,
+                '.' => seq.push(AST::Dot),
                 _ => seq.push(AST::Char(c)),
             },
             ParseState::Escape => {

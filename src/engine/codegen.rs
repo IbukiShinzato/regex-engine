@@ -50,6 +50,7 @@ impl Generator {
         match ast {
             AST::Char(c) => self.gen_char(*c)?,
             AST::Or(e1, e2) => self.gen_or(e1, e2)?,
+            AST::Dot => self.gen_dot()?,
             AST::Plus(e) => self.gen_plus(e)?,
             AST::Star(e) => self.gen_star(e)?,
             AST::Question(e) => self.gen_question(e)?,
@@ -62,6 +63,13 @@ impl Generator {
     /// char命令生成関数
     fn gen_char(&mut self, c: char) -> Result<(), CodeGenError> {
         let inst = Instruction::Char(c);
+        self.insts.push(inst);
+        self.inc_pc()?;
+        Ok(())
+    }
+
+    fn gen_dot(&mut self) -> Result<(), CodeGenError> {
+        let inst = Instruction::Any;
         self.insts.push(inst);
         self.inc_pc()?;
         Ok(())
@@ -100,25 +108,6 @@ impl Generator {
         }
     }
 
-    fn gen_question(&mut self, e: &AST) -> Result<(), CodeGenError> {
-        // split L1, L2
-        let split_addr = self.pc;
-        self.inc_pc()?;
-        let split = Instruction::Split(self.pc, 0);
-        self.insts.push(split);
-
-        // L1: eのコード
-        self.gen_expr(e)?;
-
-        // L2の値を設定
-        if let Some(Instruction::Split(_, l2)) = self.insts.get_mut(split_addr) {
-            *l2 = self.pc;
-            Ok(())
-        } else {
-            Err(CodeGenError::FailQuestion)
-        }
-    }
-
     fn gen_plus(&mut self, e: &AST) -> Result<(), CodeGenError> {
         // L1: eのコード
         let l1 = self.pc;
@@ -152,6 +141,25 @@ impl Generator {
             Ok(())
         } else {
             Err(CodeGenError::FailStar)
+        }
+    }
+
+    fn gen_question(&mut self, e: &AST) -> Result<(), CodeGenError> {
+        // split L1, L2
+        let split_addr = self.pc;
+        self.inc_pc()?;
+        let split = Instruction::Split(self.pc, 0);
+        self.insts.push(split);
+
+        // L1: eのコード
+        self.gen_expr(e)?;
+
+        // L2の値を設定
+        if let Some(Instruction::Split(_, l2)) = self.insts.get_mut(split_addr) {
+            *l2 = self.pc;
+            Ok(())
+        } else {
+            Err(CodeGenError::FailQuestion)
         }
     }
 

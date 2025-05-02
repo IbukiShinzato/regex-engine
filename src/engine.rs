@@ -8,6 +8,7 @@ use std::fmt::{self, Display};
 #[derive(Debug)]
 pub enum Instruction {
     Char(char),
+    Any,
     Match,
     Jump(usize),
     Split(usize, usize),
@@ -17,6 +18,7 @@ impl Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Instruction::Char(c) => write!(f, "char {}", c),
+            Instruction::Any => write!(f, "any"),
             Instruction::Match => write!(f, "match"),
             Instruction::Jump(addr) => write!(f, "jump {:>04}", addr),
             Instruction::Split(addr1, addr2) => write!(f, "split {:>04}, {:>04}", addr1, addr2),
@@ -30,8 +32,8 @@ impl Display for Instruction {
 /// # 利用例
 ///
 /// ```
-/// use regex;
-/// regex::print("abc|(de|cd)+");
+/// use regex_engine;
+/// regex_engine::print("abc|(de|cd)+");
 /// ```
 ///
 /// # 返り値
@@ -58,7 +60,7 @@ pub fn print(expr: &str) -> Result<(), DynError> {
 ///
 /// ```
 /// use regex_engine;
-/// regex_engine::do_matching("abc|(de|cd)+", "decddede", true)
+/// regex_engine::do_matching("abc|(de|cd)+", "decddede", true);
 /// ```
 ///
 /// # 引数

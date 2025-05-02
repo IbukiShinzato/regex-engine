@@ -1,3 +1,5 @@
 /target
 Cargo.lock
-test.txt
+
+# test_text
+sample/

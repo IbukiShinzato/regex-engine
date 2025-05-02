@@ -58,6 +58,16 @@ fn eval_depth(
                     return Ok(false);
                 }
             }
+            Instruction::Any => {
+                if let Some(&sp_c) = line.get(sp) {
+                    if sp_c != '\n' {
+                        safe_add(&mut pc, &1, || EvalError::PCOverFlow)?;
+                        safe_add(&mut sp, &1, || EvalError::SPOverFlow)?;
+                    }
+                } else {
+                    return Ok(false);
+                }
+            }
             Instruction::Match => {
                 return Ok(true);
             }
@@ -106,6 +116,26 @@ fn eval_width(inst: &[Instruction], line: &[char]) -> Result<bool, EvalError> {
             Instruction::Char(c) => {
                 if let Some(sp_c) = line.get(sp) {
                     if c == sp_c {
+                        safe_add(&mut pc, &1, || EvalError::PCOverFlow)?;
+                        safe_add(&mut sp, &1, || EvalError::SPOverFlow)?;
+                    } else {
+                        if ctx.is_empty() {
+                            return Ok(false);
+                        } else {
+                            pop_ctx(&mut pc, &mut sp, &mut ctx)?;
+                        }
+                    }
+                } else {
+                    if ctx.is_empty() {
+                        return Ok(false);
+                    } else {
+                        pop_ctx(&mut pc, &mut sp, &mut ctx)?;
+                    }
+                }
+            }
+            Instruction::Any => {
+                if let Some(&sp_c) = line.get(sp) {
+                    if sp_c != '\n' {
                         safe_add(&mut pc, &1, || EvalError::PCOverFlow)?;
                         safe_add(&mut sp, &1, || EvalError::SPOverFlow)?;
                     } else {
