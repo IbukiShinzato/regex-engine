@@ -3,7 +3,6 @@ use std::{
     error::Error,
     fmt::{self, Display},
     mem::take,
-    sync::RwLock,
 };
 
 /// Types for expressing AST.
