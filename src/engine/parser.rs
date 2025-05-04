@@ -24,7 +24,7 @@ impl AST {
 
         match self {
             AST::Char(c) => writeln!(f, "{}└─Char({})", indent, c),
-            AST::Dot => writeln!(f, "{}└─Dor", indent),
+            AST::Dot => writeln!(f, "{}└─Dot", indent),
             AST::Plus(ast) => {
                 writeln!(f, "{}{}Plus", indent, branch)?;
                 ast.fmt_with_indent(f, depth + 2)
